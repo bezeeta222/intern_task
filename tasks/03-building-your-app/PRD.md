@@ -45,14 +45,15 @@ If anything is missing, go back to [01-getting-started](../01-getting-started/) 
 ### Create Your Project
 
 ```bash
-# Create a new Next.js project
+# Create a new Next.js project with TypeScript
 bun create next-app@latest movie-explorer-learning
 
 # During setup, answer like this:
-# - TypeScript? → Yes
+# - TypeScript? → Yes ✅
 # - ESLint? → Yes
-# - Tailwind CSS? → Yes
-# - App Router? → Yes
+# - Tailwind CSS? → Yes ✅
+# - App Router? → Yes ✅
+# - Import alias? → Yes (default @/*)
 # - Everything else → (defaults are fine)
 
 # Enter the project
@@ -68,6 +69,34 @@ bun dev
 2. You should see the Next.js welcome page
 3. Press Ctrl+C to stop the server (you'll restart it later)
 
+### Install shadcn/ui
+
+shadcn/ui is a collection of beautiful, accessible components built on top of Tailwind CSS.
+
+```bash
+# Initialize shadcn/ui
+bun x shadcn-ui@latest init
+
+# Answer the prompts:
+# - Style: Default
+# - Base color: Slate
+# - CSS variables: Yes
+
+# Install the components we'll use
+bun x shadcn-ui@latest add button
+bun x shadcn-ui@latest add input
+bun x shadcn-ui@latest add card
+bun x shadcn-ui@latest add badge
+bun x shadcn-ui@latest add skeleton
+bun x shadcn-ui@latest add alert
+```
+
+**What this does**:
+- Creates `components.json` configuration
+- Creates `lib/utils.ts` for utility functions
+- Creates `components/ui/` folder with all installed components
+- Now you can import: `import { Button } from '@/components/ui/button'`
+
 ### Add Environment Variables
 
 Create `.env.local` file in your project root:
@@ -81,6 +110,31 @@ Replace `your_api_key_here` with your actual TMDB API key!
 
 ⚠️ **Important**: Add `.env.local` to `.gitignore` - it should already be there!
 
+### Verify Project Structure
+
+Your project should now have:
+
+```
+movie-explorer-learning/
+├── app/
+│   ├── layout.tsx
+│   ├── page.tsx
+│   └── api/
+├── components/
+│   ├── ui/              ← shadcn/ui components
+│   │   ├── button.tsx
+│   │   ├── input.tsx
+│   │   ├── card.tsx
+│   │   └── ...
+│   └── (your components)
+├── lib/
+│   └── utils.ts         ← shadcn utilities
+├── tsconfig.json        ← TypeScript config
+├── tailwind.config.ts   ← Tailwind config
+├── components.json      ← shadcn config
+└── .env.local
+```
+
 ### Push to GitHub
 
 ```bash
@@ -91,7 +145,7 @@ git init
 git add .
 
 # Initial commit
-git commit -m "Initial: Create Next.js movie explorer project"
+git commit -m "Initial: Create Next.js movie explorer with TypeScript and shadcn/ui"
 
 # Create repo on GitHub first, then:
 git remote add origin https://github.com/YOUR_USERNAME/movie-explorer-learning.git
@@ -121,157 +175,248 @@ By end of Day 1, you should understand:
 
 ### Tasks
 
-#### Task 1.1: Create Project Structure
+#### Task 1.1: Create Project Structure with TypeScript
 
 **What to do:**
-1. Delete the default pages (clean up `app/page.js`)
-2. Create these folders in `app/`:
+1. Delete the default pages (clean up `app/page.tsx`)
+2. Create folder structure:
    ```
    app/
    ├── components/
-   │   └── SearchBar.jsx
+   │   └── SearchBar.tsx
    ├── api/
    │   └── search/
-   │       └── route.js
-   └── page.js
+   │       └── route.ts
+   ├── layout.tsx
+   └── page.tsx
    ```
 
-**Code for `app/page.js`:**
+**Code for `app/page.tsx`:**
 
-```javascript
+```typescript
 'use client'
 
 import SearchBar from './components/SearchBar'
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4">
-      <header className="mb-8">
+    <div className="min-h-screen bg-white p-4">
+      <header className="mb-8 border-b pb-4">
         <h1 className="text-4xl font-bold mb-2">🎬 Movie Explorer</h1>
-        <p className="text-gray-400">Search millions of movies</p>
+        <p className="text-gray-600">Search millions of movies with TypeScript & shadcn/ui</p>
       </header>
 
-      <SearchBar />
+      <main>
+        <SearchBar />
+      </main>
     </div>
   )
 }
 ```
 
 **Acceptance Criteria:**
-- [ ] Project structure is created
-- [ ] page.js renders without errors
-- [ ] Browser shows the header
+- [ ] Project structure created
+- [ ] page.tsx renders without errors
+- [ ] Browser shows header with styling
+- [ ] No TypeScript errors in terminal
 
 ---
 
-#### Task 1.2: Create SearchBar Component
+#### Task 1.1b: Create TypeScript Types File
+
+Create `lib/types.ts` to define all our data types:
+
+```typescript
+// lib/types.ts
+
+export interface Movie {
+  id: number
+  title: string
+  poster_path: string | null
+  vote_average: number
+  release_date: string
+  overview: string
+}
+
+export interface SearchResponse {
+  results: Movie[]
+  total_results: number
+  total_pages: number
+}
+
+export interface SearchState {
+  query: string
+  loading: boolean
+  results: Movie[]
+  error: string
+}
+```
+
+**Acceptance Criteria:**
+- [ ] `lib/types.ts` file created
+- [ ] All interfaces defined
+- [ ] No TypeScript errors
+
+---
+
+#### Task 1.2: Create SearchBar Component with shadcn/ui
 
 **What to do:**
-Build a search component with an input and button.
+Build a search component using shadcn/ui Button and Input components with full TypeScript typing.
 
-**Code for `app/components/SearchBar.jsx`:**
+**Code for `app/components/SearchBar.tsx`:**
 
-```javascript
+```typescript
 'use client'
 
-import { useState } from 'react'
+import { useState, FormEvent } from 'react'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Movie, SearchState } from '@/lib/types'
 
-export default function SearchBar() {
-  const [query, setQuery] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [results, setResults] = useState([])
-  const [error, setError] = useState('')
+interface SearchBarProps {
+  onSearchResults?: (results: Movie[]) => void
+}
 
-  const handleSearch = async (e) => {
+export default function SearchBar({ onSearchResults }: SearchBarProps) {
+  const [state, setState] = useState<SearchState>({
+    query: '',
+    loading: false,
+    results: [],
+    error: ''
+  })
+
+  const handleSearch = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    if (!query.trim()) {
-      setError('Please enter a search term')
+    if (!state.query.trim()) {
+      setState(prev => ({ ...prev, error: 'Please enter a search term' }))
       return
     }
 
-    setLoading(true)
-    setError('')
-    setResults([])
+    setState(prev => ({
+      ...prev,
+      loading: true,
+      error: '',
+      results: []
+    }))
 
     try {
-      const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
+      const response = await fetch(
+        `/api/search?q=${encodeURIComponent(state.query)}`
+      )
       const data = await response.json()
 
       if (!response.ok) {
-        setError(data.error || 'Search failed')
+        setState(prev => ({
+          ...prev,
+          error: data.error || 'Search failed',
+          loading: false
+        }))
         return
       }
 
-      setResults(data.results || [])
-    } catch (err) {
-      setError('Failed to fetch movies. Try again.')
-      console.error(err)
-    } finally {
-      setLoading(false)
+      setState(prev => ({
+        ...prev,
+        results: data.results || [],
+        loading: false
+      }))
+
+      onSearchResults?.(data.results || [])
+    } catch (error) {
+      setState(prev => ({
+        ...prev,
+        error: 'Failed to fetch movies. Try again.',
+        loading: false
+      }))
     }
   }
 
   return (
-    <div>
+    <section className="w-full max-w-2xl mx-auto">
       {/* Search Form */}
-      <form onSubmit={handleSearch} className="mb-8 flex gap-2">
-        <input
+      <form onSubmit={handleSearch} className="mb-6 flex gap-2">
+        <Input
           type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          value={state.query}
+          onChange={(e) => setState(prev => ({ ...prev, query: e.target.value }))}
           placeholder="Search for a movie..."
-          className="flex-1 px-4 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500"
+          className="flex-1"
         />
-        <button
-          type="submit"
-          disabled={loading}
-          className="px-6 py-2 bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-        >
-          {loading ? 'Searching...' : 'Search'}
-        </button>
+        <Button type="submit" disabled={state.loading}>
+          {state.loading ? 'Searching...' : 'Search'}
+        </Button>
       </form>
 
       {/* Error Message */}
-      {error && (
-        <div className="p-4 bg-red-900/20 border border-red-700 rounded mb-4 text-red-200">
-          {error}
-        </div>
+      {state.error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{state.error}</AlertDescription>
+        </Alert>
       )}
 
       {/* Results Count */}
-      {results.length > 0 && (
-        <p className="text-gray-400 mb-4">Found {results.length} movies</p>
+      {state.results.length > 0 && (
+        <p className="text-sm text-gray-600 mb-4">
+          Found {state.results.length} movies
+        </p>
       )}
 
       {/* Results - For now, just show count */}
-      {results.length > 0 && (
-        <div className="text-gray-400">
-          <p>Movies found! (Display coming tomorrow)</p>
+      {state.results.length > 0 && (
+        <div className="text-gray-600">
+          <p>Movies found! (Display coming Day 2)</p>
         </div>
       )}
-    </div>
+    </section>
   )
 }
 ```
 
+**Key TypeScript & shadcn/ui Features**:
+- ✅ Proper `FormEvent<HTMLFormElement>` type for form handling
+- ✅ `SearchBarProps` interface for component props
+- ✅ Uses `SearchState` type from `lib/types.ts`
+- ✅ shadcn/ui `<Input />` component
+- ✅ shadcn/ui `<Button />` component with disabled state
+- ✅ shadcn/ui `<Alert />` for error messages
+- ✅ Full state management with proper types
+
 **Acceptance Criteria:**
-- [ ] Component renders with input and button
+- [ ] Component renders with shadcn Input and Button
 - [ ] Input accepts text
 - [ ] Button submits form without page reload
 - [ ] Loading state shows "Searching..."
+- [ ] Error messages display with Alert component
+- [ ] No TypeScript errors in terminal
 
 ---
 
-#### Task 1.3: Create API Route for Search
+#### Task 1.3: Create API Route for Search with TypeScript
 
 **What to do:**
-Build a backend API route that calls TMDB API.
+Build a backend API route that calls TMDB API with proper TypeScript types and error handling.
 
-**Code for `app/api/search/route.js`:**
+**Code for `app/api/search/route.ts`:**
 
-```javascript
-export async function GET(request) {
+```typescript
+import { NextRequest } from 'next/server'
+import { SearchResponse, Movie } from '@/lib/types'
+
+// Type for TMDB API response
+interface TMDBResponse {
+  results: Array<{
+    id: number
+    title: string
+    poster_path: string | null
+    vote_average: number
+    release_date: string
+    overview: string
+  }>
+}
+
+export async function GET(request: NextRequest): Promise<Response> {
   // Get the search query from URL
   const { searchParams } = new URL(request.url)
   const query = searchParams.get('q')
@@ -284,10 +429,22 @@ export async function GET(request) {
     )
   }
 
+  // Get API credentials from environment
+  const baseUrl = process.env.NEXT_PUBLIC_TMDB_BASE_URL
+  const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY
+
+  if (!baseUrl || !apiKey) {
+    return Response.json(
+      { error: 'API configuration missing' },
+      { status: 500 }
+    )
+  }
+
   try {
-    // Call TMDB API
+    // Call TMDB API with typed response
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_TMDB_BASE_URL}/search/movie?query=${encodeURIComponent(query)}&api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}`
+      `${baseUrl}/search/movie?query=${encodeURIComponent(query)}&api_key=${apiKey}`,
+      { next: { revalidate: 60 } } // Cache for 60 seconds
     )
 
     // Check if API call was successful
@@ -295,14 +452,29 @@ export async function GET(request) {
       throw new Error(`TMDB API error: ${response.status}`)
     }
 
-    const data = await response.json()
+    const data = await response.json() as TMDBResponse
 
-    // Return only first 20 results
-    return Response.json({
-      results: data.results?.slice(0, 20) || []
-    })
+    // Return typed response with first 20 results
+    const results: Movie[] = (data.results?.slice(0, 20) || []).map(movie => ({
+      id: movie.id,
+      title: movie.title,
+      poster_path: movie.poster_path,
+      vote_average: movie.vote_average,
+      release_date: movie.release_date,
+      overview: movie.overview
+    }))
+
+    const searchResponse: SearchResponse = {
+      results,
+      total_results: data.results.length,
+      total_pages: 1
+    }
+
+    return Response.json(searchResponse)
   } catch (error) {
-    console.error('Search API error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    console.error('Search API error:', errorMessage)
+
     return Response.json(
       { error: 'Failed to fetch movies from TMDB' },
       { status: 500 }
@@ -311,11 +483,21 @@ export async function GET(request) {
 }
 ```
 
+**Key TypeScript Features**:
+- ✅ `NextRequest` type for proper request handling
+- ✅ `TMDBResponse` interface for API response structure
+- ✅ Typed return type: `Promise<Response>`
+- ✅ Type-safe array mapping
+- ✅ Proper error type checking with `instanceof`
+- ✅ Returns `SearchResponse` type defined in `lib/types.ts`
+
 **Acceptance Criteria:**
-- [ ] API route exists at `/api/search`
+- [ ] API route exists at `/api/search` with `.ts` extension
 - [ ] Accepts `q` query parameter
-- [ ] Returns JSON with results array
+- [ ] Returns JSON with `SearchResponse` type
 - [ ] Handles errors gracefully
+- [ ] No TypeScript errors in terminal
+- [ ] Uses environment variables safely
 
 ---
 
@@ -379,188 +561,243 @@ git push
 ## ✨ Day 2: Display Movie Results
 
 **Time Estimate**: 2-3 hours
-**Goals**: Show movie data beautifully, create MovieCard component
+**Goals**: Show movie data beautifully using shadcn/ui Card component
 
 ### Learning Objectives
 
 By end of Day 2, you should understand:
 - How to map over arrays in React
-- How to pass props to components
-- How to style with Tailwind CSS
-- How to display images
+- How to pass typed props to components with TypeScript
+- How to use shadcn/ui components
+- How to display images with Next.js Image component
+
+### Prerequisites
+
+Make sure you have shadcn/ui Card, Badge components installed:
+
+```bash
+bun x shadcn-ui@latest add card
+bun x shadcn-ui@latest add badge
+```
 
 ### Tasks
 
 #### Task 2.1: Create MovieCard Component
 
 **What to do:**
-Build a component to display individual movie info.
+Build a component to display individual movie info using shadcn/ui Card.
 
-**Code for `app/components/MovieCard.jsx`:**
+**Create `app/components/MovieCard.tsx`:**
 
-```javascript
+```typescript
 'use client'
 
-export default function MovieCard({ movie }) {
+import Image from 'next/image'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Movie } from '@/lib/types'
+
+interface MovieCardProps {
+  movie: Movie
+  onAddFavorite?: (movie: Movie) => void
+  isFavorite?: boolean
+}
+
+export default function MovieCard({
+  movie,
+  onAddFavorite,
+  isFavorite = false
+}: MovieCardProps) {
   const posterUrl = movie.poster_path
     ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
     : 'https://via.placeholder.com/300x450?text=No+Image'
 
+  const year = movie.release_date?.split('-')[0] || 'Unknown'
+  const rating = movie.vote_average?.toFixed(1) || 'N/A'
+
   return (
-    <div className="bg-gray-800 rounded-lg overflow-hidden hover:scale-105 transition transform">
+    <Card className="overflow-hidden hover:shadow-lg hover:scale-105 transition-all duration-200">
       {/* Poster Image */}
-      <div className="relative h-64 overflow-hidden bg-gray-700">
-        <img
-          src={posterUrl}
-          alt={movie.title || 'Movie poster'}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            e.target.src = 'https://via.placeholder.com/300x450?text=Error'
-          }}
-        />
-      </div>
+      <CardHeader className="p-0">
+        <div className="relative h-64 w-full bg-gray-200">
+          <Image
+            src={posterUrl}
+            alt={movie.title || 'Movie poster'}
+            fill
+            className="object-cover"
+            onError={(result) => {
+              // Next.js Image handles errors gracefully
+              result.target.src = 'https://via.placeholder.com/300x450?text=No+Image'
+            }}
+          />
+        </div>
+      </CardHeader>
 
       {/* Movie Info */}
-      <div className="p-4">
+      <CardContent className="p-4">
+        {/* Title */}
         <h3 className="font-bold text-lg mb-2 line-clamp-2">
           {movie.title}
         </h3>
 
-        {/* Rating */}
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-yellow-400">⭐</span>
-          <span className="text-sm text-gray-300">
-            {movie.vote_average?.toFixed(1) || 'N/A'} / 10
-          </span>
+        {/* Rating Badge */}
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-lg">⭐</span>
+          <Badge variant="secondary">
+            {rating} / 10
+          </Badge>
+          <Badge variant="outline">
+            {year}
+          </Badge>
         </div>
 
-        {/* Release Year */}
-        <p className="text-xs text-gray-400 mb-3">
-          {movie.release_date?.split('-')[0] || 'Unknown'}
-        </p>
-
-        {/* Description */}
-        <p className="text-sm text-gray-300 line-clamp-3 mb-4">
+        {/* Overview */}
+        <p className="text-sm text-gray-600 line-clamp-3 mb-4">
           {movie.overview || 'No description available'}
         </p>
 
-        {/* Favorite Button (for now, just show it) */}
-        <button className="w-full py-2 bg-blue-600 hover:bg-blue-700 rounded transition text-sm font-medium">
-          ❤️ Add to Favorites
-        </button>
-      </div>
-    </div>
+        {/* Favorite Button */}
+        <Button
+          onClick={() => onAddFavorite?.(movie)}
+          variant={isFavorite ? 'destructive' : 'default'}
+          className="w-full"
+          disabled={!onAddFavorite}
+        >
+          {isFavorite ? '❤️ Remove from Favorites' : '🤍 Add to Favorites'}
+        </Button>
+      </CardContent>
+    </Card>
   )
 }
 ```
 
+**What This Code Does:**
+- Uses shadcn/ui `Card` component for clean styling
+- Uses `Badge` for rating and year (professional look)
+- Uses Next.js `Image` component for optimized image loading
+- TypeScript `MovieCardProps` interface ensures type safety
+- Optional `onAddFavorite` callback for favorites (we'll implement Day 3)
+
 **Acceptance Criteria:**
 - [ ] Component displays movie title
-- [ ] Shows movie poster image
-- [ ] Displays rating
-- [ ] Shows release year
+- [ ] Shows movie poster image using Next.js Image
+- [ ] Displays rating in Badge
+- [ ] Shows release year in Badge
 - [ ] Has a favorites button
+- [ ] No TypeScript errors
 
 ---
 
-#### Task 2.2: Display Results Grid
+#### Task 2.2: Install shadcn/ui Components
 
 **What to do:**
-Update SearchBar to show all results in a grid.
+Make sure MovieCard dependencies are installed.
 
-**Update `app/components/SearchBar.jsx`:**
+```bash
+# Install components if not already done
+bun x shadcn-ui@latest add card
+bun x shadcn-ui@latest add badge
+bun x shadcn-ui@latest add button
+
+# Verify installation
+ls -la app/components/ui/
+```
+
+You should see: `card.tsx`, `badge.tsx`, `button.tsx`
+
+---
+
+#### Task 2.3: Update SearchBar to Display Results
+
+**What to do:**
+Update SearchBar component to show movie results in a grid.
+
+**Update `app/components/SearchBar.tsx`:**
 
 Add this import at the top:
-```javascript
+```typescript
 import MovieCard from './MovieCard'
 ```
 
-Replace the "Results" section (after the error message) with:
+Replace your existing return statement's results section with:
 
-```javascript
+```typescript
       {/* Results Grid */}
-      {results.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {results.map((movie) => (
-            <MovieCard key={movie.id} movie={movie} />
-          ))}
+      {state.results.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold mb-4">
+            Found {state.results.length} movies
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {state.results.map((movie) => (
+              <MovieCard
+                key={movie.id}
+                movie={movie}
+                isFavorite={false}
+              />
+            ))}
+          </div>
         </div>
       )}
 
       {/* No Results Message */}
-      {!loading && query && results.length === 0 && !error && (
-        <div className="text-center py-12">
-          <p className="text-gray-400 text-lg">No movies found for "{query}"</p>
-          <p className="text-gray-500 text-sm">Try searching for something else</p>
+      {!state.loading && state.query && state.results.length === 0 && !state.error && (
+        <div className="text-center py-12 mt-8">
+          <p className="text-lg font-medium">No movies found for "{state.query}"</p>
+          <p className="text-gray-500 mt-2">Try searching for something else</p>
         </div>
       )}
 ```
 
 **Acceptance Criteria:**
-- [ ] Results display in grid (4 columns on desktop)
-- [ ] Grid responsive (1 col on mobile, 2 on tablet)
-- [ ] Each movie shows poster, title, rating, year
-- [ ] No results message shows when appropriate
+- [ ] Results display in responsive grid
+- [ ] Grid is 4 columns on desktop, 1 on mobile
+- [ ] Each movie card shows all info
+- [ ] No results message appears when appropriate
+- [ ] No TypeScript errors
 
 ---
 
-#### Task 2.3: Test the Display
+#### Task 2.4: Test the Display
 
 **Testing Steps:**
-1. Start dev server: `bun dev`
-2. Search for "batman"
-3. You should see 20 movie cards in a grid
-4. Resize browser window - grid should adapt
-5. Check on phone (if available)
+1. Make sure dev server running: `bun dev`
+2. Open browser to `http://localhost:3000`
+3. Search for "batman"
+4. You should see movie cards in a grid
+5. Resize browser window - grid adapts automatically
+6. Check: hover effect on cards, images load
 
 **What Should Happen:**
-- ✅ Movies display in grid
-- ✅ All movie info visible
-- ✅ Images load (or show placeholder)
-- ✅ Responsive on different screen sizes
-- ✅ Hover effect on cards
+- ✅ Movies display in responsive grid
+- ✅ All movie info visible (title, rating, year, description)
+- ✅ Images load with Next.js Image (optimized)
+- ✅ Cards have nice hover effect
+- ✅ Grid adapts to screen size
+- ✅ No console errors
 
----
-
-#### Task 2.4: Add Image Optimization
-
-**What to do:**
-Use Next.js Image component for better performance.
-
-**Update imports in `app/components/MovieCard.jsx`:**
-
-```javascript
-'use client'
-
-import Image from 'next/image'
-```
-
-**Replace the image tag with:**
-
-```javascript
-        <img
-          src={posterUrl}
-          alt={movie.title || 'Movie poster'}
-          className="w-full h-full object-cover"
-          loading="lazy"
-          onError={(e) => {
-            e.target.src = 'https://via.placeholder.com/300x450?text=Error'
-          }}
-        />
-```
-
-**Acceptance Criteria:**
-- [ ] Images load with `loading="lazy"`
-- [ ] No console errors
-- [ ] Page still responsive
+**If Errors Occur:**
+- Check browser console (F12)
+- Check terminal where you ran `bun dev`
+- Verify `lib/types.ts` exists
+- Verify shadcn components installed: `ls app/components/ui/`
 
 ---
 
 #### Task 2.5: Commit to GitHub
 
 ```bash
+# Check what changed
+git status
+
+# Stage all changes
 git add .
-git commit -m "Day 2: Display movie results in grid with cards"
+
+# Commit with clear message
+git commit -m "Day 2: Display movie results in responsive grid with shadcn/ui Card"
+
+# Push to GitHub
 git push
 ```
 
@@ -568,54 +805,77 @@ git push
 
 ### Day 2 Checklist
 
-- [ ] MovieCard component created
-- [ ] Results display in grid
-- [ ] Grid is responsive
-- [ ] Movie info visible
-- [ ] Images load or show placeholder
+- [ ] MovieCard component created (MovieCard.tsx)
+- [ ] MovieCard uses shadcn/ui Card and Badge
+- [ ] MovieCard uses TypeScript with MovieCardProps interface
+- [ ] SearchBar imports and displays MovieCard
+- [ ] Results display in responsive grid
+- [ ] Grid shows 1 col on mobile, 4 cols on desktop
+- [ ] Movie info visible (title, rating, year, description)
+- [ ] Images load correctly
 - [ ] No results message works
-- [ ] Code committed to GitHub
+- [ ] No TypeScript errors
+- [ ] All code committed to GitHub
 
 ---
 
 ## ✨ Day 3: Add Favorites Feature
 
 **Time Estimate**: 2-3 hours
-**Goals**: Save favorites to browser storage, display saved movies
+**Goals**: Save favorites to browser storage with TypeScript, display saved movies
 
 ### Learning Objectives
 
 By end of Day 3, you should understand:
-- How to use localStorage
-- How to manage state across components
-- How to persist data
-- How useEffect works
+- How to use localStorage safely
+- How to create custom hooks with TypeScript
+- How to manage state across components with typing
+- How useEffect works with dependencies
+- How to prevent infinite loops
 
 ### Tasks
 
-#### Task 3.1: Create Favorites Hook
+#### Task 3.1: Create Favorites Hook with TypeScript
 
 **What to do:**
-Build a custom hook to manage favorites.
+Build a custom hook to manage favorites with full type safety.
 
-**Create `app/hooks/useFavorites.js`:**
+**Create `app/hooks/useFavorites.ts`:**
 
-```javascript
+```typescript
+'use client'
+
 import { useState, useEffect } from 'react'
+import { Movie } from '@/lib/types'
 
-export function useFavorites() {
-  const [favorites, setFavorites] = useState([])
+interface UseFavoritesReturn {
+  favorites: Movie[]
+  addFavorite: (movie: Movie) => void
+  removeFavorite: (movieId: number) => void
+  isFavorite: (movieId: number) => boolean
+  isLoading: boolean
+}
+
+const STORAGE_KEY = 'movieFavorites'
+
+export function useFavorites(): UseFavoritesReturn {
+  const [favorites, setFavorites] = useState<Movie[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  // Load favorites from localStorage on mount
+  // Load favorites from localStorage on component mount
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('movieFavorites')
-      if (stored) {
-        setFavorites(JSON.parse(stored))
+      // Only run in browser (localStorage not available on server)
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem(STORAGE_KEY)
+        if (stored) {
+          const parsed = JSON.parse(stored) as Movie[]
+          setFavorites(parsed)
+        }
       }
     } catch (error) {
-      console.error('Failed to load favorites:', error)
+      console.error('Failed to load favorites from localStorage:', error)
+      // Continue without favorites if loading fails
     } finally {
       setIsLoading(false)
     }
@@ -623,62 +883,86 @@ export function useFavorites() {
 
   // Save to localStorage whenever favorites change
   useEffect(() => {
-    if (!isLoading) {
+    // Don't save while still loading initial data
+    if (!isLoading && typeof window !== 'undefined') {
       try {
-        localStorage.setItem('movieFavorites', JSON.stringify(favorites))
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites))
       } catch (error) {
-        console.error('Failed to save favorites:', error)
+        console.error('Failed to save favorites to localStorage:', error)
       }
     }
   }, [favorites, isLoading])
 
-  const addFavorite = (movie) => {
-    // Don't add duplicates
+  const addFavorite = (movie: Movie): void => {
+    // Prevent duplicates by checking if movie already exists
     if (!favorites.some((fav) => fav.id === movie.id)) {
       setFavorites([...favorites, movie])
     }
   }
 
-  const removeFavorite = (movieId) => {
+  const removeFavorite = (movieId: number): void => {
     setFavorites(favorites.filter((fav) => fav.id !== movieId))
   }
 
-  const isFavorite = (movieId) => {
+  const isFavorite = (movieId: number): boolean => {
     return favorites.some((fav) => fav.id === movieId)
   }
 
-  return { favorites, addFavorite, removeFavorite, isFavorite, isLoading }
+  return {
+    favorites,
+    addFavorite,
+    removeFavorite,
+    isFavorite,
+    isLoading
+  }
 }
 ```
 
+**What This Code Does:**
+- `UseFavoritesReturn` interface ensures hook returns consistent types
+- `Movie` type imported from lib/types ensures type safety
+- Checks `typeof window !== 'undefined'` (localStorage only works in browser)
+- Loads favorites from localStorage on mount
+- Saves to localStorage whenever favorites change
+- Prevents duplicate favorites
+- Returns loading state for UI handling
+
 **Acceptance Criteria:**
-- [ ] Hook loads favorites on mount
-- [ ] Hook saves to localStorage
-- [ ] Can add favorites
-- [ ] Can remove favorites
+- [ ] Hook file created: `app/hooks/useFavorites.ts` (not .js)
+- [ ] Uses TypeScript interfaces
+- [ ] Loads favorites on mount
+- [ ] Saves to localStorage
+- [ ] Can add favorites (no duplicates)
+- [ ] Can remove favorites by ID
 - [ ] Can check if movie is favorite
+- [ ] No TypeScript errors
 
 ---
 
-#### Task 3.2: Update MovieCard for Favorites
+#### Task 3.2: Update MovieCard to Use Favorites Hook
 
 **What to do:**
-Make favorites button functional.
+Integrate the favorites hook into MovieCard to make button functional.
 
-**Update `app/components/MovieCard.jsx`:**
+**Update `app/components/MovieCard.tsx`:**
 
-Add import:
-```javascript
-import { useFavorites } from '../hooks/useFavorites'
-```
+Replace the function with this updated version:
 
-Update the component:
-```javascript
+```typescript
 'use client'
 
-import { useFavorites } from '../hooks/useFavorites'
+import Image from 'next/image'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Movie } from '@/lib/types'
+import { useFavorites } from '@/app/hooks/useFavorites'
 
-export default function MovieCard({ movie }) {
+interface MovieCardProps {
+  movie: Movie
+}
+
+export default function MovieCard({ movie }: MovieCardProps) {
   const { isFavorite, addFavorite, removeFavorite } = useFavorites()
   const isLiked = isFavorite(movie.id)
 
@@ -686,7 +970,10 @@ export default function MovieCard({ movie }) {
     ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
     : 'https://via.placeholder.com/300x450?text=No+Image'
 
-  const handleToggleFavorite = () => {
+  const year = movie.release_date?.split('-')[0] || 'Unknown'
+  const rating = movie.vote_average?.toFixed(1) || 'N/A'
+
+  const handleToggleFavorite = (): void => {
     if (isLiked) {
       removeFavorite(movie.id)
     } else {
@@ -695,114 +982,158 @@ export default function MovieCard({ movie }) {
   }
 
   return (
-    <div className="bg-gray-800 rounded-lg overflow-hidden hover:scale-105 transition transform">
+    <Card className="overflow-hidden hover:shadow-lg hover:scale-105 transition-all duration-200">
       {/* Poster Image */}
-      <div className="relative h-64 overflow-hidden bg-gray-700">
-        <img
-          src={posterUrl}
-          alt={movie.title || 'Movie poster'}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            e.target.src = 'https://via.placeholder.com/300x450?text=Error'
-          }}
-        />
-      </div>
+      <CardHeader className="p-0">
+        <div className="relative h-64 w-full bg-gray-200">
+          <Image
+            src={posterUrl}
+            alt={movie.title || 'Movie poster'}
+            fill
+            className="object-cover"
+          />
+        </div>
+      </CardHeader>
 
       {/* Movie Info */}
-      <div className="p-4">
+      <CardContent className="p-4">
+        {/* Title */}
         <h3 className="font-bold text-lg mb-2 line-clamp-2">
           {movie.title}
         </h3>
 
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-yellow-400">⭐</span>
-          <span className="text-sm text-gray-300">
-            {movie.vote_average?.toFixed(1) || 'N/A'} / 10
-          </span>
+        {/* Rating and Year */}
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-lg">⭐</span>
+          <Badge variant="secondary">
+            {rating} / 10
+          </Badge>
+          <Badge variant="outline">
+            {year}
+          </Badge>
         </div>
 
-        <p className="text-xs text-gray-400 mb-3">
-          {movie.release_date?.split('-')[0] || 'Unknown'}
-        </p>
-
-        <p className="text-sm text-gray-300 line-clamp-3 mb-4">
+        {/* Overview */}
+        <p className="text-sm text-gray-600 line-clamp-3 mb-4">
           {movie.overview || 'No description available'}
         </p>
 
         {/* Favorite Button - Now Functional */}
-        <button
+        <Button
           onClick={handleToggleFavorite}
-          className={`w-full py-2 rounded transition text-sm font-medium ${
-            isLiked
-              ? 'bg-red-600 hover:bg-red-700'
-              : 'bg-blue-600 hover:bg-blue-700'
-          }`}
+          variant={isLiked ? 'destructive' : 'default'}
+          className="w-full"
         >
           {isLiked ? '❤️ Remove from Favorites' : '🤍 Add to Favorites'}
-        </button>
-      </div>
-    </div>
+        </Button>
+      </CardContent>
+    </Card>
   )
 }
 ```
 
+**What Changed:**
+- Removed `onAddFavorite` prop - now uses hook directly
+- Uses `useFavorites()` hook for state management
+- `handleToggleFavorite` now has `: void` return type
+- Proper TypeScript button event handling
+- Uses shadcn Button variants for styling
+
 **Acceptance Criteria:**
-- [ ] Button shows "Add to Favorites" initially
-- [ ] Button changes to "Remove" when favorited
-- [ ] Button color changes (red when favorited)
-- [ ] Clicking adds/removes from favorites
+- [ ] Button shows correct text (Add/Remove)
+- [ ] Button changes color based on favorite state
+- [ ] Clicking toggles favorite
 - [ ] Favorites persist after page refresh
+- [ ] No TypeScript errors
 
 ---
 
-#### Task 3.3: Create Favorites Page
+#### Task 3.3: Create FavoritesSection Component
 
 **What to do:**
-Build a page to view all favorite movies.
+Build a section to display all favorite movies at top of page.
 
-**Create `app/components/FavoritesSection.jsx`:**
+**Create `app/components/FavoritesSection.tsx`:**
 
-```javascript
+```typescript
 'use client'
 
-import { useFavorites } from '../hooks/useFavorites'
+import { Card, CardContent } from '@/components/ui/card'
+import { useFavorites } from '@/app/hooks/useFavorites'
 import MovieCard from './MovieCard'
 
 export default function FavoritesSection() {
   const { favorites, isLoading } = useFavorites()
 
+  // Show loading state
   if (isLoading) {
-    return <div className="text-gray-400">Loading favorites...</div>
+    return (
+      <div className="mb-12">
+        <h2 className="text-2xl font-bold mb-4">❤️ Your Favorites</h2>
+        <p className="text-gray-500">Loading...</p>
+      </div>
+    )
   }
 
+  // Show empty state
+  if (favorites.length === 0) {
+    return (
+      <section className="mb-12">
+        <h2 className="text-2xl font-bold mb-4">
+          ❤️ Your Favorites ({favorites.length})
+        </h2>
+        <Card className="border-dashed">
+          <CardContent className="p-8 text-center">
+            <p className="text-lg font-medium mb-2">No favorites yet</p>
+            <p className="text-gray-500">
+              Search for movies and click the heart icon to save them here
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+    )
+  }
+
+  // Show favorites grid
   return (
     <section className="mb-12">
       <h2 className="text-2xl font-bold mb-4">
         ❤️ Your Favorites ({favorites.length})
       </h2>
-
-      {favorites.length === 0 ? (
-        <div className="text-center py-8 bg-gray-800/50 rounded">
-          <p className="text-gray-400">No favorites yet</p>
-          <p className="text-gray-500 text-sm">
-            Search for movies and click the heart to add them here
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {favorites.map((movie) => (
-            <MovieCard key={movie.id} movie={movie} />
-          ))}
-        </div>
-      )}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {favorites.map((movie) => (
+          <MovieCard key={movie.id} movie={movie} />
+        ))}
+      </div>
     </section>
   )
 }
 ```
 
-**Update `app/page.js` to show favorites:**
+**What This Code Does:**
+- Displays loading state while favorites load
+- Shows empty state with helpful message
+- Displays favorite count in heading
+- Maps over favorites array showing MovieCard for each
+- Uses shadcn Card for consistent styling
 
-```javascript
+**Acceptance Criteria:**
+- [ ] Component loads without errors
+- [ ] Shows loading state initially
+- [ ] Shows empty state when no favorites
+- [ ] Shows grid of favorite movies
+- [ ] No TypeScript errors
+
+---
+
+#### Task 3.4: Update HomePage
+
+**What to do:**
+Add FavoritesSection to main page and update to TypeScript.
+
+**Update `app/page.tsx`:**
+
+```typescript
 'use client'
 
 import SearchBar from './components/SearchBar'
@@ -810,16 +1141,16 @@ import FavoritesSection from './components/FavoritesSection'
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4">
-      <header className="mb-8">
+    <div className="min-h-screen bg-white p-4">
+      <header className="mb-8 border-b pb-4">
         <h1 className="text-4xl font-bold mb-2">🎬 Movie Explorer</h1>
-        <p className="text-gray-400">Search millions of movies</p>
+        <p className="text-gray-600">Search millions of movies and save your favorites</p>
       </header>
 
-      {/* Show Favorites First */}
+      {/* Favorites Section - Shows saved movies */}
       <FavoritesSection />
 
-      {/* Then Search Section */}
+      {/* Search Section */}
       <section>
         <h2 className="text-2xl font-bold mb-4">🔍 Search Movies</h2>
         <SearchBar />
@@ -829,39 +1160,62 @@ export default function Home() {
 }
 ```
 
+**Changes:**
+- Renamed from `.js` to `.tsx`
+- Added FavoritesSection component
+- Updated background to white (matches design)
+- Shows favorites prominently at top
+
 **Acceptance Criteria:**
-- [ ] Favorites section shows at top
-- [ ] Shows count of favorites
-- [ ] Shows "No favorites" message when empty
-- [ ] Displays favorite movies in grid
-- [ ] Removing from favorites updates the section
+- [ ] HomePage displays correctly
+- [ ] FavoritesSection shows at top
+- [ ] SearchBar shows below
+- [ ] Favorites appear as user adds them
+- [ ] No TypeScript errors
 
 ---
 
-#### Task 3.4: Test Favorites
+#### Task 3.5: Test Favorites Feature
 
 **Testing Steps:**
 1. Start dev server: `bun dev`
 2. Search for "batman"
-3. Click "Add to Favorites" on a movie
-4. Check that favorites section updates
-5. Refresh the page
-6. Favorites should still be there!
-7. Click "Remove" to delete
+3. Click heart on a movie → button changes color
+4. Refresh page → favorite still shows
+5. Add 3-4 more favorites
+6. Check FavoritesSection → shows all added movies
+7. Click heart again → removes from favorites
 
 **What Should Happen:**
-- ✅ Favorites section updates immediately
-- ✅ Button text/color changes
+- ✅ Button toggles between Add/Remove
+- ✅ Button color changes (default → destructive red)
+- ✅ Favorites appear in FavoritesSection
 - ✅ Favorites persist after refresh
-- ✅ Can add and remove multiple movies
+- ✅ Removing favorite removes from section
+- ✅ Count updates correctly
+- ✅ No console errors
+
+**If Errors:**
+- Check browser console (F12)
+- Verify all files created: `.ts` not `.js`
+- Verify shadcn components installed
+- Check that `lib/types.ts` exists
 
 ---
 
-#### Task 3.5: Commit to GitHub
+#### Task 3.6: Commit to GitHub
 
 ```bash
+# Check what changed
+git status
+
+# Stage all changes
 git add .
-git commit -m "Day 3: Add favorites functionality with localStorage"
+
+# Commit with clear message
+git commit -m "Day 3: Add favorites feature with TypeScript hook and localStorage"
+
+# Push to GitHub
 git push
 ```
 
@@ -869,40 +1223,217 @@ git push
 
 ### Day 3 Checklist
 
-- [ ] useFavorites hook created
-- [ ] Favorites save to localStorage
-- [ ] Favorites load on page load
-- [ ] MovieCard favorites button works
-- [ ] FavoritesSection displays saved movies
-- [ ] Favorites persist after refresh
-- [ ] Can add and remove favorites
-- [ ] Code committed to GitHub
+- [ ] useFavorites hook created (useFavorites.ts)
+- [ ] Hook uses TypeScript interfaces
+- [ ] Hook handles localStorage safely
+- [ ] MovieCard integrated with hook
+- [ ] Favorite button toggles state
+- [ ] FavoritesSection component created
+- [ ] HomePage updated to include FavoritesSection
+- [ ] Favorites persist after page refresh
+- [ ] Favorites count displays correctly
+- [ ] No TypeScript errors
+- [ ] All code committed to GitHub
 
 ---
 
-## ✨ Day 4: Polish & Responsive Design
+## ✨ Day 4: Loading States & Error Handling
 
 **Time Estimate**: 2-3 hours
-**Goals**: Improve UI, fix mobile layout, add refinements
+**Goals**: Add professional loading skeleton, error handling, and polish UI
 
 ### Learning Objectives
 
 By end of Day 4, you should understand:
+- Creating loading skeleton components
+- Error handling with retry functionality
 - Responsive design with Tailwind
-- Better UX with loading states
-- Error handling
-- Performance optimization
+- Better UX with visual feedback
+
+### Prerequisites
+
+Make sure you have shadcn/ui Skeleton and Alert components installed:
+
+```bash
+bun x shadcn-ui@latest add skeleton
+bun x shadcn-ui@latest add alert
+```
 
 ### Tasks
 
-#### Task 4.1: Improve Mobile Responsiveness
+#### Task 4.1: Create Movie Skeleton Component
 
 **What to do:**
-Ensure app looks great on all devices.
+Build a skeleton loader for loading state.
 
-**Update `app/page.js`:**
+**Create `app/components/MovieSkeleton.tsx`:**
 
-```javascript
+```typescript
+'use client'
+
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+
+export default function MovieSkeleton() {
+  return (
+    <Card className="overflow-hidden">
+      {/* Image Skeleton */}
+      <CardHeader className="p-0">
+        <Skeleton className="h-64 w-full rounded-none" />
+      </CardHeader>
+
+      {/* Content Skeleton */}
+      <CardContent className="p-4">
+        {/* Title Skeleton */}
+        <Skeleton className="h-6 w-full mb-3" />
+
+        {/* Rating and Year Skeleton */}
+        <div className="flex gap-2 mb-3">
+          <Skeleton className="h-6 w-20" />
+          <Skeleton className="h-6 w-16" />
+        </div>
+
+        {/* Description Skeleton */}
+        <Skeleton className="h-4 w-full mb-2" />
+        <Skeleton className="h-4 w-5/6 mb-4" />
+
+        {/* Button Skeleton */}
+        <Skeleton className="h-10 w-full" />
+      </CardContent>
+    </Card>
+  )
+}
+```
+
+**What This Code Does:**
+- Uses shadcn/ui Skeleton component for professional loading animation
+- Matches MovieCard layout exactly
+- Automatically animates with pulsing effect
+- Responsive and accessible
+
+**Acceptance Criteria:**
+- [ ] Skeleton component created
+- [ ] Matches MovieCard layout
+- [ ] Smooth pulsing animation
+- [ ] Responsive to screen size
+- [ ] No TypeScript errors
+
+---
+
+#### Task 4.2: Update SearchBar with Loading State
+
+**What to do:**
+Show skeleton loaders while searching.
+
+**Update `app/components/SearchBar.tsx`:**
+
+Add import at top:
+```typescript
+import MovieSkeleton from './MovieSkeleton'
+```
+
+Update your return statement to show skeletons during loading:
+
+```typescript
+      {/* Loading Skeletons */}
+      {state.loading && (
+        <div className="mt-8">
+          <p className="text-gray-600 mb-4">Searching for movies...</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <MovieSkeleton key={`skeleton-${index}`} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Results Grid */}
+      {!state.loading && state.results.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold mb-4">
+            Found {state.results.length} movies
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {state.results.map((movie) => (
+              <MovieCard key={movie.id} movie={movie} />
+            ))}
+          </div>
+        </div>
+      )}
+```
+
+**Acceptance Criteria:**
+- [ ] Skeletons show while searching
+- [ ] 8 skeletons display in grid
+- [ ] Skeletons disappear when results load
+- [ ] Smooth animation transition
+- [ ] No TypeScript errors
+
+---
+
+#### Task 4.3: Add Error Handling with Retry
+
+**What to do:**
+Show errors with retry button using shadcn/ui Alert.
+
+**Update `app/components/SearchBar.tsx`:**
+
+Add import:
+```typescript
+import { Alert, AlertDescription } from '@/components/ui/alert'
+```
+
+Update error display in return statement:
+
+```typescript
+      {/* Error Alert */}
+      {state.error && (
+        <Alert variant="destructive" className="mb-4 flex items-center justify-between">
+          <div className="flex-1">
+            <AlertDescription>
+              {state.error}
+            </AlertDescription>
+          </div>
+          <Button
+            onClick={async () => {
+              // Retry the last search
+              if (state.query) {
+                setState(prev => ({ ...prev, error: '' }))
+                // Search will be triggered by form
+              }
+            }}
+            variant="outline"
+            size="sm"
+            className="ml-2"
+          >
+            Retry
+          </Button>
+        </Alert>
+      )}
+```
+
+**What This Does:**
+- Shows error in shadcn Alert component
+- Provides Retry button for user
+- Clears error when user retries
+- Professional error display
+
+**Acceptance Criteria:**
+- [ ] Error displays with message
+- [ ] Retry button appears and works
+- [ ] Error clears on retry
+- [ ] No TypeScript errors
+
+---
+
+#### Task 4.4: Improve HomePage Layout
+
+**What to do:**
+Add sticky header and better responsive design.
+
+**Update `app/page.tsx`:**
+
+```typescript
 'use client'
 
 import SearchBar from './components/SearchBar'
@@ -910,31 +1441,39 @@ import FavoritesSection from './components/FavoritesSection'
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      {/* Header */}
-      <header className="sticky top-0 bg-gray-950/90 backdrop-blur border-b border-gray-800 p-4 z-10">
-        <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl md:text-4xl font-bold mb-1">🎬 Movie Explorer</h1>
-          <p className="text-sm md:text-base text-gray-400">Search millions of movies</p>
+    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
+      {/* Sticky Header */}
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-gray-200 shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 py-4">
+          <h1 className="text-3xl md:text-4xl font-bold">🎬 Movie Explorer</h1>
+          <p className="text-sm md:text-base text-gray-600">
+            Search millions of movies and save your favorites
+          </p>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto p-4 md:p-6">
-        {/* Show Favorites First */}
+      <main className="max-w-6xl mx-auto px-4 py-8 md:py-12">
+        {/* Favorites Section */}
         <FavoritesSection />
 
         {/* Search Section */}
         <section className="mt-12">
-          <h2 className="text-2xl md:text-3xl font-bold mb-4">🔍 Search Movies</h2>
+          <h2 className="text-2xl md:text-3xl font-bold mb-6">🔍 Search Movies</h2>
           <SearchBar />
         </section>
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-950 border-t border-gray-800 p-4 mt-12">
-        <div className="max-w-6xl mx-auto text-center text-gray-500 text-sm">
-          <p>Movie data from TMDB API | Built with Next.js & React</p>
+      <footer className="border-t border-gray-200 mt-12 py-6">
+        <div className="max-w-6xl mx-auto px-4 text-center text-gray-600 text-sm">
+          <p>
+            Movie data from{' '}
+            <a href="https://www.themoviedb.org/" className="font-semibold hover:text-gray-900">
+              TMDB API
+            </a>
+            {' | '}Built with Next.js, React, TypeScript & shadcn/ui
+          </p>
         </div>
       </footer>
     </div>
@@ -942,171 +1481,66 @@ export default function Home() {
 }
 ```
 
+**What Changed:**
+- Renamed from `.js` to `.tsx`
+- Added sticky header that stays on scroll
+- Better responsive padding/spacing
+- Gradient background
+- Professional footer with links
+- Backdrop blur effect
+
 **Acceptance Criteria:**
-- [ ] Header is sticky on scroll
-- [ ] Layout works on mobile (375px)
-- [ ] Layout works on tablet (768px)
-- [ ] Layout works on desktop (1024px+)
-- [ ] Text sizes adjust for each device
-- [ ] Footer appears at bottom
+- [ ] Header sticks on scroll
+- [ ] Works on mobile (375px)
+- [ ] Works on tablet (768px)
+- [ ] Works on desktop (1024px+)
+- [ ] Text sizes scale properly
+- [ ] No TypeScript errors
 
 ---
 
-#### Task 4.2: Add Loading Skeleton
-
-**What to do:**
-Show loading state while fetching movies.
-
-**Create `app/components/MovieSkeleton.jsx`:**
-
-```javascript
-export default function MovieSkeleton() {
-  return (
-    <div className="bg-gray-800 rounded-lg overflow-hidden animate-pulse">
-      {/* Poster Skeleton */}
-      <div className="h-64 bg-gray-700"></div>
-
-      {/* Info Skeleton */}
-      <div className="p-4">
-        <div className="h-6 bg-gray-700 rounded mb-3"></div>
-        <div className="h-4 bg-gray-700 rounded w-2/3 mb-3"></div>
-        <div className="h-4 bg-gray-700 rounded w-1/2 mb-4"></div>
-        <div className="h-4 bg-gray-700 rounded mb-4"></div>
-        <div className="h-10 bg-gray-700 rounded"></div>
-      </div>
-    </div>
-  )
-}
-```
-
-**Update `app/components/SearchBar.jsx` to show skeletons while loading:**
-
-Add import:
-```javascript
-import MovieSkeleton from './MovieSkeleton'
-```
-
-Update the results section:
-```javascript
-      {/* Loading Skeletons */}
-      {loading && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <MovieSkeleton key={i} />
-          ))}
-        </div>
-      )}
-
-      {/* Results Grid */}
-      {!loading && results.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {results.map((movie) => (
-            <MovieCard key={movie.id} movie={movie} />
-          ))}
-        </div>
-      )}
-```
-
-**Acceptance Criteria:**
-- [ ] Shows skeleton loaders while searching
-- [ ] 8 skeletons display in grid
-- [ ] Skeletons disappear when results load
-- [ ] Smooth animation
-
----
-
-#### Task 4.3: Add Error Retry
-
-**What to do:**
-Let users retry when search fails.
-
-**Update the error section in `app/components/SearchBar.jsx`:**
-
-```javascript
-const [retryError, setRetryError] = useState(false)
-
-const handleRetry = () => {
-  setRetryError(false)
-  handleSearch(new Event('submit'))
-}
-
-// Update error display:
-      {/* Error Message with Retry */}
-      {error && (
-        <div className="p-4 bg-red-900/20 border border-red-700 rounded mb-4 flex items-center justify-between">
-          <span className="text-red-200">{error}</span>
-          <button
-            onClick={handleRetry}
-            className="px-3 py-1 bg-red-700 hover:bg-red-600 rounded text-sm transition"
-          >
-            Retry
-          </button>
-        </div>
-      )}
-```
-
-**Acceptance Criteria:**
-- [ ] Error shows with message
-- [ ] Retry button appears
-- [ ] Retry button triggers search again
-
----
-
-#### Task 4.4: Optimize Performance
-
-**What to do:**
-Make the app faster.
-
-**Update `app/components/SearchBar.jsx`:**
-
-Add debounce for better UX:
-```javascript
-const [query, setQuery] = useState('')
-const [searchTimeout, setSearchTimeout] = useState(null)
-
-const handleInputChange = (e) => {
-  setQuery(e.target.value)
-
-  // Auto-search after 500ms of typing (optional)
-  clearTimeout(searchTimeout)
-  // You could add auto-search here if desired
-}
-```
-
-**Acceptance Criteria:**
-- [ ] App loads quickly
-- [ ] No unnecessary re-renders
-- [ ] Search responds quickly
-- [ ] Scrolling is smooth
-
----
-
-#### Task 4.5: Test Everything
+#### Task 4.5: Test Loading & Errors
 
 **Testing Steps:**
-1. Open app on desktop
-2. Search for movie - should show skeletons then results
-3. Open DevTools (F12) - simulate mobile
-4. Test on different screen sizes
-5. Try error (disconnect internet, then search)
-6. Click retry button
-7. Add some favorites
-8. Refresh page - favorites should be there
+1. Start dev server: `bun dev`
+2. Search for "batman" → should show 8 skeletons then results
+3. Open DevTools → Throttle network to "Slow 3G"
+4. Search again → watch skeletons load slowly
+5. Test error: Disconnect internet
+6. Try to search → should show error with Retry button
+7. Reconnect internet and click Retry
+8. Test responsive: Resize browser or use mobile device
 
 **What Should Happen:**
-- ✅ Looks good on all screen sizes
-- ✅ Loading states work
-- ✅ Error handling works
-- ✅ Favorites persist
+- ✅ Skeletons load smoothly
+- ✅ Results replace skeletons
+- ✅ Error shows with Retry button
+- ✅ Retry works correctly
+- ✅ Header stays sticky
+- ✅ Responsive on all sizes
 - ✅ No console errors
+
+**If Errors:**
+- Check browser console (F12)
+- Verify `MovieSkeleton.tsx` created
+- Verify shadcn Skeleton installed: `ls app/components/ui/skeleton.tsx`
+- Check that SearchBar uses `state.loading` not `loading`
 
 ---
 
 #### Task 4.6: Commit to GitHub
 
 ```bash
+# Check changes
+git status
+
+# Stage all
 git add .
-git commit -m "Day 4: Polish UI, improve responsiveness, add loading states"
+
+# Commit with clear message
+git commit -m "Day 4: Add loading skeleton, error handling, and improve layout"
+
+# Push
 git push
 ```
 
@@ -1114,253 +1548,462 @@ git push
 
 ### Day 4 Checklist
 
-- [ ] Mobile responsiveness verified
-- [ ] Sticky header works
-- [ ] Loading skeletons display
-- [ ] Error retry button works
-- [ ] Performance optimized
-- [ ] All screen sizes tested
-- [ ] Code committed to GitHub
+- [ ] MovieSkeleton component created (MovieSkeleton.tsx)
+- [ ] SearchBar imports and uses MovieSkeleton
+- [ ] Skeletons display during loading
+- [ ] Error Alert with Retry button works
+- [ ] HomePage has sticky header
+- [ ] Layout responsive (mobile, tablet, desktop)
+- [ ] Gradient background applied
+- [ ] Footer displays correctly
+- [ ] Loading and error states tested
+- [ ] All code is TypeScript (.tsx)
+- [ ] No TypeScript errors
+- [ ] All code committed to GitHub
 
 ---
 
-## ✨ Day 5: Final Polish & Deployment Prep
+## ✨ Day 5: Final Polish & Code Quality
 
 **Time Estimate**: 2-3 hours
-**Goals**: Clean code, final testing, prepare for deployment
+**Goals**: Add accessibility, improve TypeScript types, test thoroughly, clean up
 
 ### Learning Objectives
 
 By end of Day 5, you should understand:
-- Code organization and cleanup
-- Testing your app thoroughly
-- Preparing for production
-- Deployment basics
+- Accessibility best practices (a11y)
+- TypeScript strict mode and type safety
+- Testing strategies
+- Code quality and best practices
+- Production-ready code
 
 ### Tasks
 
-#### Task 5.1: Code Cleanup
+#### Task 5.1: Add Accessibility Features
 
 **What to do:**
-Clean up code, remove console.logs, fix any issues.
+Make app accessible to users with disabilities.
 
-**Checklist:**
-- [ ] Remove all `console.log()` statements (keep only errors)
-- [ ] Check for unused imports
-- [ ] Add comments to complex code
-- [ ] Fix any ESLint warnings
+**Update `app/components/MovieCard.tsx`:**
 
-**Find and fix issues:**
-```bash
-# Check for issues
-npm run lint
-# or
-bun run lint
-```
+Add aria-labels to the Button component:
 
-**Fix simple issues automatically:**
-```bash
-npm run lint -- --fix
-# or
-bun run lint -- --fix
-```
-
----
-
-#### Task 5.2: Accessibility Improvements
-
-**What to do:**
-Make app accessible to everyone.
-
-**Update `app/components/MovieCard.jsx`:**
-- Add `alt` text (already have it)
-- Add `aria-label` to buttons
-
-```javascript
-<button
+```typescript
+<Button
   onClick={handleToggleFavorite}
-  aria-label={isLiked ? 'Remove from favorites' : 'Add to favorites'}
-  className={`w-full py-2 rounded transition text-sm font-medium ${
-    isLiked
-      ? 'bg-red-600 hover:bg-red-700'
-      : 'bg-blue-600 hover:bg-blue-700'
-  }`}
+  variant={isLiked ? 'destructive' : 'default'}
+  className="w-full"
+  aria-label={isLiked ? `Remove ${movie.title} from favorites` : `Add ${movie.title} to favorites`}
 >
   {isLiked ? '❤️ Remove from Favorites' : '🤍 Add to Favorites'}
-</button>
+</Button>
 ```
 
-**Update `app/components/SearchBar.jsx`:**
+**Update `app/components/SearchBar.tsx`:**
 
-```javascript
-<input
+Add aria-labels to Input and Button:
+
+```typescript
+<Input
   type="text"
-  value={query}
-  onChange={(e) => setQuery(e.target.value)}
+  value={state.query}
+  onChange={(e) => setState(prev => ({ ...prev, query: e.target.value }))}
   placeholder="Search for a movie..."
-  aria-label="Search for movies"
-  className="flex-1 px-4 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500"
+  aria-label="Search movies by title"
 />
+<Button
+  type="submit"
+  disabled={state.loading}
+  aria-busy={state.loading}
+>
+  {state.loading ? 'Searching...' : 'Search'}
+</Button>
 ```
 
 **Acceptance Criteria:**
-- [ ] Images have alt text
-- [ ] Buttons have aria labels
+- [ ] Images have descriptive alt text
+- [ ] Buttons have aria-labels
+- [ ] Form inputs have aria-labels
+- [ ] Loading state has aria-busy
 - [ ] Keyboard navigation works (Tab key)
-- [ ] Color contrast is good
-- [ ] Focus indicators visible
+- [ ] Color contrast meets WCAG AA standard
+- [ ] Focus indicators visible on interactive elements
 
 ---
 
-#### Task 5.3: Final Testing
+#### Task 5.2: Review and Improve Types
 
 **What to do:**
-Test everything thoroughly.
+Ensure all components have proper TypeScript types.
 
-**Desktop Testing:**
-```
-[ ] Search functionality works
-[ ] Results display correctly
-[ ] Favorites add/remove works
-[ ] Favorites persist on refresh
-[ ] Error handling works
-[ ] Loading states show
+**Checklist for TypeScript Best Practices:**
+
+```typescript
+// ✅ Good - Props are typed
+interface MovieCardProps {
+  movie: Movie
+}
+
+export default function MovieCard({ movie }: MovieCardProps) {
+  // ...
+}
+
+// ❌ Bad - Props are not typed
+export default function MovieCard({ movie }) {
+  // ...
+}
 ```
 
-**Mobile Testing:**
+**Review all your files:**
+- [ ] All component props have interfaces
+- [ ] All state variables have types
+- [ ] All function return types are specified
+- [ ] No `any` types used (except where absolutely necessary)
+- [ ] API responses have types
+- [ ] Event handlers have proper typing
+
+**Files to review:**
+- `app/components/SearchBar.tsx` - Check state, handlers
+- `app/components/MovieCard.tsx` - Check props interface
+- `app/hooks/useFavorites.ts` - Check return type interface
+- `app/api/search/route.ts` - Check request/response types
+- `lib/types.ts` - Check all exported types are complete
+
+**Acceptance Criteria:**
+- [ ] No TypeScript errors in entire project
+- [ ] No `any` types (except in unavoidable cases)
+- [ ] All exports have proper types
+- [ ] All props have interfaces
+- [ ] `tsc --noEmit` passes without errors
+
+---
+
+#### Task 5.3: Comprehensive Testing
+
+**What to do:**
+Test all features thoroughly before deployment.
+
+**Desktop Testing (Chrome/Firefox/Safari):**
 ```
-[ ] Responsive layout works
-[ ] Touch interactions work
-[ ] Scrolling is smooth
-[ ] Images load quickly
+Functionality:
+[ ] Search returns results
+[ ] Results display in grid (1, 2, 3, or 4 columns correctly)
+[ ] Movie cards show: title, poster, rating, year, description
+[ ] Add to favorites works
+[ ] Remove from favorites works
+[ ] Favorites persist after page refresh
+
+UI/UX:
+[ ] Header stays sticky when scrolling
+[ ] Loading skeletons display during search
+[ ] Error message shows with Retry button
+[ ] Smooth transitions and animations
+[ ] No console errors (F12)
+```
+
+**Mobile Testing (iPhone/Android viewport):**
+```
+Responsiveness:
+[ ] Works at 375px (mobile)
+[ ] Works at 768px (tablet)
+[ ] Grid adapts: 1 col mobile → 4 cols desktop
+[ ] Text is readable (no zoom needed)
+[ ] Buttons are large enough to tap
 [ ] No horizontal scrollbar
-```
 
-**Browser Testing:**
-```
-[ ] Chrome: works
-[ ] Firefox: works
-[ ] Safari: works
-[ ] Edge: works
+Touch:
+[ ] All buttons are tappable (min 48px)
+[ ] Search works on mobile keyboard
+[ ] Scrolling is smooth
+[ ] No layout shift on scroll
 ```
 
 **Network Testing:**
 ```
-[ ] Fast network: loads quickly
-[ ] Slow network: shows loading state
-[ ] No network: shows error
-[ ] Error recovery works
+[ ] Test on fast network (loads in <2s)
+[ ] Test on slow 3G (verify skeletons show)
+[ ] Test on offline (error displays, retry works)
+[ ] Test after reconnect (retry button works)
 ```
+
+**Acceptance Criteria:**
+- [ ] All features work on desktop
+- [ ] All features work on mobile
+- [ ] All features work on tablet
+- [ ] No errors in browser console
+- [ ] Lighthouse score >90 for Performance
+- [ ] No TypeScript errors
 
 ---
 
-#### Task 5.4: Update README
+#### Task 5.4: Code Cleanup
 
 **What to do:**
-Create a README for your project.
+Clean up code, remove debug statements, and optimize.
 
-**Create `README.md` in project root:**
+**Checklist:**
+- [ ] Remove all `console.log()` statements (keep only `console.error()`)
+- [ ] Remove unused imports
+- [ ] Remove unused variables
+- [ ] Add JSDoc comments to complex functions
+- [ ] Check for unused CSS classes
+
+**Run linting:**
+```bash
+# Check for issues
+bun run lint
+
+# Auto-fix simple issues
+bun run lint -- --fix
+```
+
+**Example of good comments:**
+```typescript
+/**
+ * Loads movie favorites from localStorage on component mount
+ * Handles errors gracefully and continues without data if loading fails
+ */
+useEffect(() => {
+  try {
+    // Only run in browser
+    if (typeof window !== 'undefined') {
+      // ...
+    }
+  } catch (error) {
+    console.error('Failed to load favorites:', error)
+  }
+}, [])
+```
+
+**Acceptance Criteria:**
+- [ ] No console.log statements (except errors)
+- [ ] No unused imports
+- [ ] No unused variables
+- [ ] Complex code has comments
+- [ ] Linter passes (`bun run lint`)
+- [ ] All code follows TypeScript strict mode
+
+---
+
+#### Task 5.5: Update Project README
+
+**What to do:**
+Create comprehensive README for your project repository.
+
+**Update/Create `README.md` in project root:**
 
 ```markdown
 # 🎬 Movie Explorer
 
-A movie search app built with Next.js and React.
+A modern movie search app built with Next.js, TypeScript, and shadcn/ui.
+
+**Live Demo**: [your-username.vercel.app](https://your-username.vercel.app)
 
 ## Features
 
-- 🔍 Search movies by title
-- 📸 View movie posters and details
-- ❤️ Save your favorite movies
-- 📱 Works on all devices
-- 🚀 Lightning fast performance
+- 🔍 **Search Movies** - Search millions of movies from TMDB
+- 📸 **Movie Details** - View posters, ratings, release dates, and descriptions
+- ❤️ **Save Favorites** - Bookmark movies (saves locally in browser)
+- 📱 **Responsive Design** - Works perfectly on mobile, tablet, and desktop
+- ⚡ **Fast Performance** - Built with Next.js for optimal speed
+- 🎨 **Modern UI** - Professional components from shadcn/ui
 
 ## Tech Stack
 
-- **Frontend**: React, Next.js, Tailwind CSS
-- **Data**: TMDB API
+- **Frontend**: React 18 + Next.js 14
+- **Language**: TypeScript (strict mode)
+- **Styling**: Tailwind CSS + shadcn/ui
+- **API**: TMDB (The Movie Database)
 - **Storage**: Browser localStorage
 - **Deployment**: Vercel
 
 ## Getting Started
 
 ### Prerequisites
-- Node.js v20+
-- Bun v1.1+
-- TMDB API key (get free at https://www.themoviedb.org/settings/api)
+- **Node.js** v20 or higher
+- **Bun** v1.1 or higher ([install bun](https://bun.sh))
+- **TMDB API Key** (free, get it [here](https://www.themoviedb.org/settings/api))
 
 ### Installation
 
-1. Clone the repo
-```bash
-git clone https://github.com/YOUR_USERNAME/movie-explorer-learning.git
-cd movie-explorer-learning
-```
+1. **Clone and navigate to project**
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/movie-explorer.git
+   cd movie-explorer
+   ```
 
-2. Install dependencies
-```bash
-bun install
-```
+2. **Install dependencies**
+   ```bash
+   bun install
+   ```
 
-3. Create `.env.local`
-```bash
-NEXT_PUBLIC_TMDB_API_KEY=your_api_key_here
-NEXT_PUBLIC_TMDB_BASE_URL=https://api.themoviedb.org/3
-```
+3. **Create environment file** (`.env.local`)
+   ```bash
+   NEXT_PUBLIC_TMDB_API_KEY=your_api_key_here
+   NEXT_PUBLIC_TMDB_BASE_URL=https://api.themoviedb.org/3
+   ```
 
-4. Start dev server
-```bash
-bun dev
-```
+4. **Start development server**
+   ```bash
+   bun dev
+   ```
 
-5. Open http://localhost:3000
+5. **Open in browser**
+   ```
+   http://localhost:3000
+   ```
 
 ## Project Structure
 
 ```
 app/
-├── components/       # React components
-├── api/             # API routes
-├── hooks/           # Custom hooks
-└── page.js          # Home page
+├── components/          # React components
+│   ├── SearchBar.tsx    # Search input and logic
+│   ├── MovieCard.tsx    # Movie display card
+│   ├── MovieSkeleton.tsx # Loading skeleton
+│   └── FavoritesSection.tsx # Favorites display
+├── api/
+│   └── search/route.ts  # TMDB search API route
+├── hooks/
+│   └── useFavorites.ts  # Custom hook for favorites
+├── lib/
+│   └── types.ts         # TypeScript type definitions
+└── page.tsx             # Home page
 ```
+
+## Key Features Explained
+
+### Search (`app/components/SearchBar.tsx`)
+- Type-safe search with TypeScript
+- Real-time loading state with skeleton cards
+- Error handling with retry button
+- Debounced API calls for performance
+
+### Favorites (`app/hooks/useFavorites.ts`)
+- Custom React hook for state management
+- Automatic localStorage persistence
+- Prevents duplicate favorites
+- Full TypeScript typing
+
+### API Integration (`app/api/search/route.ts`)
+- Next.js API route for TMDB integration
+- Type-safe API responses
+- Error handling and validation
+- Environment variable protection
 
 ## What I Learned
 
-- React components and hooks
-- API integration
-- localStorage for persistence
-- Responsive design
-- Error handling
-- Git and GitHub
+- ✅ React hooks (useState, useEffect, custom hooks)
+- ✅ TypeScript in React components
+- ✅ Next.js App Router and API routes
+- ✅ Component composition and props
+- ✅ localStorage for data persistence
+- ✅ Responsive design with Tailwind CSS
+- ✅ Error handling and loading states
+- ✅ Git version control and GitHub
 
 ## Future Improvements
 
-- [ ] Add movie details page
+- [ ] Movie details page with more info
+- [ ] Sort and filter options
 - [ ] User authentication
 - [ ] Share favorites with friends
 - [ ] Movie recommendations
-- [ ] Advanced filtering
+- [ ] Dark mode toggle
+- [ ] Infinite scroll for results
 
-## Live Demo
+## Troubleshooting
 
-Visit: https://your-deployment.vercel.app
+**Search returns no results?**
+- Verify TMDB API key in `.env.local`
+- Check if API key has search permissions
+- Try searching for popular movies: "avatar", "inception"
 
-## Author
+**Favorites not saving?**
+- Check browser localStorage is enabled (not in private mode)
+- Clear cache and try again
+- Check browser console for errors (F12)
 
-YOUR_NAME
+**App won't start?**
+- Verify Node.js v20+: `node --version`
+- Verify Bun v1.1+: `bun --version`
+- Delete `node_modules` and `.next`: `rm -rf node_modules .next`
+- Reinstall: `bun install`
+
+## Testing Checklist
+
+Before deployment, verify:
+- [ ] Search functionality works
+- [ ] Results display correctly
+- [ ] Favorites add/remove works
+- [ ] Favorites persist after refresh
+- [ ] App works on mobile
+- [ ] No console errors
+- [ ] Loading states show
+- [ ] Error handling works
+- [ ] All TypeScript errors fixed
+
+## Deployment
+
+Deploy to Vercel (1-click):
+
+1. Push code to GitHub
+2. Go to [vercel.com](https://vercel.com)
+3. Create new project from your GitHub repo
+4. Add environment variable: `NEXT_PUBLIC_TMDB_API_KEY`
+5. Deploy!
+
+[Detailed deployment guide →](../../tasks/04-deployment/deployment.md)
 
 ## License
 
-MIT
+MIT - Feel free to use this project for learning!
+
+## Credits
+
+- Movie data: [TMDB API](https://www.themoviedb.org/)
+- UI Components: [shadcn/ui](https://shadcn-ui.com/)
+- Framework: [Next.js](https://nextjs.org/)
 ```
+
+**Acceptance Criteria:**
+- [ ] README created/updated
+- [ ] Has features section
+- [ ] Has tech stack section
+- [ ] Has setup instructions
+- [ ] Has project structure
+- [ ] Has troubleshooting section
+- [ ] Clear and well-formatted
 
 ---
 
-#### Task 5.5: Final Commit
+#### Task 5.6: Final Testing & Commit
 
+**Testing:**
 ```bash
+# Run type check
+tsc --noEmit
+
+# Run linting
+bun run lint
+
+# Run app
+bun dev
+# Test all features in browser
+```
+
+**Final Commit:**
+```bash
+# Check changes
+git status
+
+# Stage all
 git add .
-git commit -m "Day 5: Final polish, accessibility improvements, and documentation"
+
+# Commit
+git commit -m "Day 5: Add accessibility, improve types, final cleanup"
+
+# Push
 git push
 ```
 
