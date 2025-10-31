@@ -12,7 +12,8 @@ This guide walks you through every step to get your development environment read
 4. [Install VS Code](#install-vs-code)
 5. [Git & GitHub Setup](#git--github-setup)
 6. [TMDB API Key](#tmdb-api-key)
-7. [Verification Checklist](#verification-checklist)
+7. [TypeScript & shadcn/ui Setup](#typescript--shadcnui-setup)
+8. [Verification Checklist](#verification-checklist)
 
 ---
 
@@ -297,6 +298,185 @@ The Movie Database (TMDB) is a free API that gives you movie data.
 - **Never** put it on GitHub
 - **Never** email it
 - It's like a password!
+
+---
+
+## TypeScript & shadcn/ui Setup
+
+### What is TypeScript?
+
+TypeScript is JavaScript with **types**. It helps catch bugs before they happen.
+
+### What is shadcn/ui?
+
+shadcn/ui is a collection of beautiful, accessible components for React. We use it to build professional-looking UIs quickly.
+
+### Setup Instructions
+
+These steps happen **after** you create your Next.js project with the PRD setup instructions.
+
+#### Step 1: Create Your Next.js Project
+
+When you create a new Next.js project, answer these questions:
+
+```bash
+bun create next-app@latest movie-explorer
+
+# Answer these questions:
+✔ Would you like to use TypeScript? › Yes
+✔ Would you like to use ESLint? › Yes
+✔ Would you like to use Tailwind CSS? › Yes
+✔ Would you like your code inside a `src/` directory? › No
+✔ Would you like to use App Router? › Yes
+✔ Would you like to use Turbopack for next dev? › No
+✔ Would you like to customize the import alias? › No
+```
+
+#### Step 2: Navigate to Your Project
+
+```bash
+cd movie-explorer
+```
+
+#### Step 3: Initialize shadcn/ui
+
+```bash
+bun x shadcn-ui@latest init
+```
+
+Answer the prompts:
+```
+✔ Would you like to use TypeScript (recommended)? › Yes
+✔ Which style would you like to use? › Default
+✔ Which color would you like as the base color? › Slate
+✔ Where is your global CSS file? › app/globals.css
+```
+
+#### Step 4: Install Required Components
+
+As you progress through the days, install components as needed:
+
+**Day 1:**
+```bash
+bun x shadcn-ui@latest add button
+bun x shadcn-ui@latest add input
+bun x shadcn-ui@latest add alert
+```
+
+**Day 2:**
+```bash
+bun x shadcn-ui@latest add card
+bun x shadcn-ui@latest add badge
+```
+
+**Day 4:**
+```bash
+bun x shadcn-ui@latest add skeleton
+```
+
+Or install them all at once:
+```bash
+bun x shadcn-ui@latest add button input alert card badge skeleton
+```
+
+#### Step 5: Verify Installation
+
+Check that shadcn components were installed:
+
+```bash
+ls app/components/ui/
+```
+
+You should see: `button.tsx`, `input.tsx`, `alert.tsx`, `card.tsx`, `badge.tsx`, `skeleton.tsx`
+
+### What Gets Created?
+
+After setup, your project structure looks like:
+
+```
+movie-explorer/
+├── app/
+│   ├── components/
+│   │   └── ui/              # shadcn/ui components
+│   │       ├── button.tsx
+│   │       ├── input.tsx
+│   │       ├── card.tsx
+│   │       └── ...
+│   ├── api/                 # API routes (backend)
+│   ├── globals.css          # Global styles
+│   ├── layout.tsx           # Root layout
+│   └── page.tsx             # Home page
+├── lib/
+│   ├── utils.ts             # Utility functions
+│   └── types.ts             # Type definitions (you'll create this)
+├── components.json          # shadcn config (auto-created)
+├── package.json             # Dependencies
+├── tsconfig.json            # TypeScript config
+└── next.config.js           # Next.js config
+```
+
+### Important Files
+
+**`lib/types.ts`** - You'll create this to define all your types:
+```typescript
+export interface Movie {
+  id: number
+  title: string
+  poster_path: string | null
+  vote_average: number
+  release_date: string
+  overview: string
+}
+
+export interface SearchState {
+  query: string
+  loading: boolean
+  results: Movie[]
+  error: string
+}
+```
+
+**`components.json`** - Auto-created by shadcn, tells it where your components are:
+```json
+{
+  "style": "default",
+  "rsc": true,
+  "tsx": true,
+  "aliasPrefix": "@",
+  "components": {
+    "path": "app/components/ui"
+  },
+  "utils": {
+    "path": "lib/utils"
+  }
+}
+```
+
+### Troubleshooting
+
+**"shadcn-ui command not found"**
+- Try: `bun x shadcn-ui@latest init` (with `bun x`)
+- Or: `npx shadcn-ui@latest init`
+
+**"Missing tailwind.config.js"**
+- Run: `bun x shadcn-ui@latest init` again
+- It creates the config automatically
+
+**"Components not installing"**
+- Make sure you're in the project directory: `cd movie-explorer`
+- Check internet connection
+- Try: `bun x shadcn-ui@latest add button` for each component
+
+**"TypeScript errors in components"**
+- Run: `bun install` to ensure all dependencies are installed
+- Check that `tsconfig.json` exists
+- Restart your IDE (VS Code)
+
+### Next Steps
+
+1. ✅ Complete this setup
+2. ⏳ Wait for `PRD.md` instructions from your instructor
+3. ⏳ Follow Day 1 tasks to start building
 
 ---
 
