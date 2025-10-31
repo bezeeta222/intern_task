@@ -313,17 +313,33 @@ You should have:
 
 ## 🔧 Technology Stack
 
-You'll learn to use:
+You'll learn to use **professional, industry-standard technologies**:
 
-- **React** - JavaScript framework for building UIs
-- **Next.js** - Framework that adds backend capabilities to React
-- **Tailwind CSS** - Utility CSS for styling
-- **TMDB API** - Free movie database API
+### Frontend
+- **React 18** - Modern UI library
+- **Next.js 14** - Full-stack React framework
+- **TypeScript** - Type-safe JavaScript (industry standard)
+- **shadcn/ui** - Professional component library
+- **Tailwind CSS** - Utility-first styling
+
+### Backend & APIs
+- **Next.js API Routes** - Serverless backend
+- **TMDB API** - Movie database (real external API)
+
+### Tools & Version Control
+- **Bun** - Fast JavaScript runtime
 - **Git** - Version control
 - **GitHub** - Code hosting and collaboration
-- **Vercel** - Deployment platform
+- **Vercel** - Production deployment
 
-These are **real technologies** used by professional developers.
+### Why This Stack?
+
+✅ **TypeScript** - Catches bugs before they happen, used by 80% of professional teams
+✅ **shadcn/ui** - Pre-built accessible components, saves development time
+✅ **Next.js** - Full-stack capabilities, built-in optimization
+✅ **Industry Standard** - These exact technologies are used at Netflix, Uber, Airbnb, and thousands of other companies
+
+**This project teaches you to code like a professional developer.**
 
 ---
 
