@@ -1,0 +1,33 @@
+# IDE & Editor
+.claude/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Node
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+.pnpm/
+
+# Build
+.next/
+dist/
+build/
+
+# Environment
+.env.local
+.env.*.local
+.env
+
+# Logs
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# OS
+Thumbs.db
